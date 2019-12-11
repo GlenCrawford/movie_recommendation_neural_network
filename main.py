@@ -1,0 +1,4 @@
+import training_data_generator
+
+# training_data_generator.download_current_revision_article_partition_files_in_latest_wikipedia_dump()
+training_data_generator.process_current_revision_article_partition_files()

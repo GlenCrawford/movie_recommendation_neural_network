@@ -1,0 +1,4 @@
+/__pycache__/*.pyc
+
+# Exclude Wikipedia article partition files.
+/data/wikipedia_dump_articles_current_revision_partition_files/*.bz2
