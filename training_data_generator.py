@@ -7,6 +7,8 @@ import json
 import functools
 import operator
 from multiprocessing import Pool
+from collections import Counter, OrderedDict
+from itertools import chain
 from bs4 import BeautifulSoup
 import tensorflow as tf
 import mwparserfromhell
@@ -15,6 +17,8 @@ WIKIPEDIA_DUMPS_BASE_URL = 'https://dumps.wikimedia.org/enwiki/'
 WIKIPEDIA_LATEST_DUMP_URL = WIKIPEDIA_DUMPS_BASE_URL + 'latest/'
 WIKIPEDIA_ARTICLES_CURRENT_REVISIONS_PARTITION_FILES_REGEX = re.compile(r'^enwiki-latest-pages-articles[\d]+.xml-p[\d]+p[\d]+.bz2$')
 WIKIPEDIA_ARTICLES_CURRENT_REVISIONS_PARTITION_FILES_DIRECTORY = '/Users/glen/Projects/machine_learning/movie_recommendation_neural_network/data/wikipedia_dump_articles_current_revision_partition_files/'
+TRAINING_DATA_FILE_PATH = 'data/training_data.json'
+MOST_COMMON_LINKS_TO_IGNORE = ['New York Times', 'The New York Times']
 
 class WikipediaXmlHandler(xml.sax.handler.ContentHandler):
   def __init__(self):
@@ -72,8 +76,7 @@ def find_current_revision_article_partition_file_links_in_latest_wikipedia_dump(
 
 # Warning: This will download many GB of files!
 def download_current_revision_article_partition_files_in_latest_wikipedia_dump():
-  # Temporay hack on the end of the next line to only get the first file.
-  for file in find_current_revision_article_partition_file_links_in_latest_wikipedia_dump()[0:1]:
+  for file in find_current_revision_article_partition_file_links_in_latest_wikipedia_dump():
     tf.keras.utils.get_file(
       (WIKIPEDIA_ARTICLES_CURRENT_REVISIONS_PARTITION_FILES_DIRECTORY + file),
       (WIKIPEDIA_LATEST_DUMP_URL + file)
@@ -93,13 +96,16 @@ def process_current_revision_article_partition_files():
   pool.join()
 
   movies = functools.reduce(operator.concat, processes_movies)
-  print(str(movies))
+
+  serialize_and_save_movies_to_json_file(movies)
 
 # Process a specific partition file.
 def process_current_revision_article_partition_file(file_path):
   wikipedia_xml_handler = WikipediaXmlHandler()
   parser = xml.sax.make_parser()
   parser.setContentHandler(wikipedia_xml_handler)
+
+  print(f'\nProcessing file: {file_path}')
 
   for line in subprocess.Popen(['bzcat'], stdin = open((WIKIPEDIA_ARTICLES_CURRENT_REVISIONS_PARTITION_FILES_DIRECTORY + file_path)), stdout = subprocess.PIPE).stdout:
     try:
@@ -111,7 +117,7 @@ def process_current_revision_article_partition_file(file_path):
     if wikipedia_xml_handler._article_count >= 10000:
       break
 
-  print(f'\nFinished processing file: {file_path}')
+  print(f'Finished processing file: {file_path}')
   print(f'- Searched through {wikipedia_xml_handler._article_count} articles.')
   print(f'- Found {len(wikipedia_xml_handler._movies)} movie(s).')
 
@@ -125,12 +131,34 @@ def process_wikipedia_article(title, text, template = 'Infobox film'):
 
   if len(movie_infobox_matches) >= 1:
     # Extract information from infobox.
-    properties = {param.name.strip_code().strip(): param.value.strip_code().strip() for param in movie_infobox_matches[0].params if param.value.strip_code().strip()}
+    # Don't actually need, but keep in case it's useful later.
+    # properties = {param.name.strip_code().strip(): param.value.strip_code().strip() for param in movie_infobox_matches[0].params if param.value.strip_code().strip()}
 
     # Extract internal wikilinks.
     internal_links = [link.title.strip_code().strip() for link in wikipedia_article_parser.filter_wikilinks()]
 
-    # Extract external links.
-    external_links = [link.url.strip_code().strip() for link in wikipedia_article_parser.filter_external_links()]
+    internal_links = filter_out_most_common_links(internal_links)
 
-    return (title, properties, internal_links, external_links)
+    return { 'title': title, 'internal_links': internal_links }
+
+def filter_out_most_common_links(links):
+  filtered_links = list(set(links) - set(MOST_COMMON_LINKS_TO_IGNORE))
+  filtered_links.sort()
+  return filtered_links
+
+def serialize_and_save_movies_to_json_file(movies):
+  with open(TRAINING_DATA_FILE_PATH, 'w') as file:
+    json.dump({ 'movies': movies }, file)
+
+# Utility method for inspecting data. Outputs the most commonly linked articles.
+def most_common_article_links(movies):
+  unique_links = list(chain(*[list(set(movie['internal_links'])) for movie in movies]))
+  unique_links = [link.lower() for link in unique_links]
+
+  counts = Counter(unique_links)
+
+  counts = sorted(counts.items(), key = lambda x: x[1], reverse = True)
+  counts = OrderedDict(counts)
+
+  print('Most common article links:')
+  print(list(counts.items())[:10])

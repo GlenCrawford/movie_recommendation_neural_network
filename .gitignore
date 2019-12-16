@@ -2,3 +2,6 @@
 
 # Exclude Wikipedia article partition files.
 /data/wikipedia_dump_articles_current_revision_partition_files/*.bz2
+
+# Exclude the generated training data (for now). May include later, nearer the end. It'll just make commits too messy in the meantime.
+/data/training_data.json
