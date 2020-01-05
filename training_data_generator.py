@@ -19,6 +19,7 @@ WIKIPEDIA_ARTICLES_CURRENT_REVISIONS_PARTITION_FILES_REGEX = re.compile(r'^enwik
 WIKIPEDIA_ARTICLES_CURRENT_REVISIONS_PARTITION_FILES_DIRECTORY = '/Users/glen/Projects/machine_learning/movie_recommendation_neural_network/data/wikipedia_dump_articles_current_revision_partition_files/'
 TRAINING_DATA_FILE_PATH = 'data/training_data.json'
 MOST_COMMON_LINKS_TO_IGNORE = ['New York Times', 'The New York Times']
+NUMBER_OF_PROCESSES_FOR_PROCESSING_PARTITION_FILES = 1
 
 class WikipediaXmlHandler(xml.sax.handler.ContentHandler):
   def __init__(self):
@@ -88,7 +89,7 @@ def process_current_revision_article_partition_files():
   file_paths = list(filter(WIKIPEDIA_ARTICLES_CURRENT_REVISIONS_PARTITION_FILES_REGEX.match, file_paths))
 
   # Create a pool of workers to execute processes.
-  pool = Pool(processes = 1)
+  pool = Pool(processes = NUMBER_OF_PROCESSES_FOR_PROCESSING_PARTITION_FILES)
 
   processes_movies = pool.map(process_current_revision_article_partition_file, file_paths)
 
