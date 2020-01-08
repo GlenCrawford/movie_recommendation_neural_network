@@ -114,10 +114,6 @@ def process_current_revision_article_partition_file(file_path):
     except StopIteration:
       break
 
-    # Temporary hack so we don't waste time while developing.
-    if wikipedia_xml_handler._article_count >= 10000:
-      break
-
   print(f'Finished processing file: {file_path}')
   print(f'- Searched through {wikipedia_xml_handler._article_count} articles.')
   print(f'- Found {len(wikipedia_xml_handler._movies)} movie(s).')
@@ -163,3 +159,7 @@ def most_common_article_links(movies):
 
   print('Most common article links:')
   print(list(counts.items())[:10])
+
+if __name__ == '__main__':
+  download_current_revision_article_partition_files_in_latest_wikipedia_dump()
+  process_current_revision_article_partition_files()
