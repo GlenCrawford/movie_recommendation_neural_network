@@ -16,7 +16,7 @@ import mwparserfromhell
 WIKIPEDIA_DUMPS_BASE_URL = 'https://dumps.wikimedia.org/enwiki/'
 WIKIPEDIA_LATEST_DUMP_URL = WIKIPEDIA_DUMPS_BASE_URL + 'latest/'
 WIKIPEDIA_ARTICLES_CURRENT_REVISIONS_PARTITION_FILES_REGEX = re.compile(r'^enwiki-latest-pages-articles[\d]+.xml-p[\d]+p[\d]+.bz2$')
-WIKIPEDIA_ARTICLES_CURRENT_REVISIONS_PARTITION_FILES_DIRECTORY = '/Users/glen/Projects/machine_learning/movie_recommendation_neural_network/data/wikipedia_dump_articles_current_revision_partition_files/'
+WIKIPEDIA_ARTICLES_CURRENT_REVISIONS_PARTITION_FILES_DIRECTORY = os.getcwd() + '/data/wikipedia_dump_articles_current_revision_partition_files/'
 TRAINING_DATA_FILE_PATH = 'data/training_data.json'
 MOST_COMMON_LINKS_TO_IGNORE = ['New York Times', 'The New York Times']
 NUMBER_OF_PROCESSES_FOR_PROCESSING_PARTITION_FILES = 1

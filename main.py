@@ -1,6 +1,7 @@
 import json
 import functools
 import operator
+import datetime
 import numpy as np
 import random
 import pandas as pd
@@ -15,6 +16,7 @@ plt.style.use('fivethirtyeight')
 plt.rcParams['font.size'] = 15
 
 TRAINING_DATA_FILE_PATH = 'data/training_data.json'
+LOG_DIRECTORY = 'logs/fit/' + datetime.datetime.now().strftime('%Y%m%d-%H%M%S')
 
 def reverse_index_lookup(index, value):
   return list(index.keys())[list(index.values()).index(value)]
@@ -165,7 +167,8 @@ model.fit_generator(
   training_data_batch_generator,
   epochs = 3, # 15
   steps_per_epoch = (len(movie_link_pairs) // 1024),
-  verbose = 2
+  verbose = 2,
+  callbacks = [tf.keras.callbacks.TensorBoard(log_dir = LOG_DIRECTORY)]
 )
 
 ### Inspect the results ###
